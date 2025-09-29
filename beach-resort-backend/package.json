@@ -1,0 +1,39 @@
+{
+  "name": "beach-resort-backend",
+  "version": "1.0.0",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "nodemon --watch src --ext ts --exec ts-node server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "migrate": "npx sequelize-cli db:migrate --config src/config/config.ts --env development",
+    "seed": "npx sequelize-cli db:seed:all --config src/config/config.ts --env development"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.2",
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.14.4",
+    "razorpay": "^2.9.4",
+    "sequelize": "^6.37.7",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.23",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^20.19.13",
+    "@types/uuid": "^10.0.0",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.2",
+    "sequelize-cli": "^6.6.3"
+  }
+}

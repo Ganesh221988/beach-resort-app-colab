@@ -1,0 +1,31 @@
+name: Sync to Main Repo
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source repo
+        uses: actions/checkout@v3
+
+      - name: Push changes to main repo
+        env:
+          PAT: ${{ secrets.MAIN_REPO_TOKEN }}
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+          # Clone the target repo with PAT
+          git clone https://Ganesh221988:${PAT}@github.com/Ganesh221988/beach-resort-app.git target-repo
+
+          # Sync files from source to target
+          rsync -av --exclude='.git' ./ target-repo/
+
+          cd target-repo
+          git add .
+          git commit -m "Sync from Bolt Repo" || echo "No changes to commit"
+          git push https://Ganesh221988:${PAT}@github.com/Ganesh221988/beach-resort-app.git main

@@ -1,0 +1,88 @@
+import React, { useEffect, useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import apiClient from "../../api/axiosClient";
+import { Button } from "../../components/ui/button";
+import { Heart } from "lucide-react";
+
+interface Property {
+  id: string;
+  title: string;
+  location: string;
+  price: number;
+  description: string;
+  complimentaryBreakfast?: boolean;
+}
+
+const Favorites: React.FC = () => {
+  const { user } = useAuth();
+  const [favorites, setFavorites] = useState<Property[]>([]);
+
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      if (!user) return;
+      try {
+        const res = await apiClient.get(`/customers/${user.id}/favorites`);
+        setFavorites(res.data);
+      } catch (err) {
+        console.error("Error fetching favorites:", err);
+      }
+    };
+
+    fetchFavorites();
+  }, [user]);
+
+  const removeFavorite = async (propertyId: string) => {
+    if (!user) return;
+    try {
+      await apiClient.delete(`/customers/${user.id}/favorites/${propertyId}`);
+      setFavorites((prev) => prev.filter((p) => p.id !== propertyId));
+    } catch (err) {
+      console.error("Error removing favorite:", err);
+    }
+  };
+
+  if (!user) return <p className="p-6">Login required.</p>;
+
+  return (
+    <div className="p-6">
+      <h2 className="text-2xl font-semibold mb-4">❤️ My Favorites</h2>
+
+      {favorites.length === 0 ? (
+        <p className="text-gray-600">No favorites yet.</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {favorites.map((p) => (
+            <div key={p.id} className="border rounded-lg p-4 shadow-md relative">
+              <button
+                onClick={() => removeFavorite(p.id)}
+                className="absolute top-2 right-2"
+              >
+                <Heart size={22} className="fill-red-500 text-red-500" />
+              </button>
+
+              <h3 className="text-lg font-bold">{p.title}</h3>
+              <p>{p.location}</p>
+              <p className="text-green-700">₹{p.price} / night</p>
+              <p className="text-sm text-gray-600">{p.description}</p>
+
+              {p.complimentaryBreakfast && (
+                <p className="text-sm text-yellow-700 font-semibold mt-1">
+                  🍳 Complimentary Breakfast
+                </p>
+              )}
+
+              <Button
+                className="mt-3 w-full"
+                onClick={() => (window.location.href = `/customer/book/${p.id}`)}
+              >
+                Book Now
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Favorites;
