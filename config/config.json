@@ -1,0 +1,39 @@
+{
+  "development": {
+    "username": "root",
+    "password": "Myloginpwd123$",
+    "database": "beach_resort",
+    "host": "127.0.0.1",
+    "port": 3306,
+    "dialect": "mysql",
+    "socialMedia": {
+      "facebook": {
+        "appId": "your-facebook-app-id",
+        "appSecret": "your-facebook-app-secret",
+        "callbackUrl": "http://localhost:3000/api/social/facebook/callback"
+      },
+      "instagram": {
+        "appId": "your-instagram-app-id",
+        "appSecret": "your-instagram-app-secret",
+        "callbackUrl": "http://localhost:3000/api/social/instagram/callback"
+      }
+    }
+  },
+  "test": {
+    "username": "root",
+    "password": "",
+    "database": "beach_resort_test",
+    "host": "127.0.0.1",
+    "port": 3306,
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": "",
+    "database": "beach_resort_production",
+    "host": "127.0.0.1",
+    "port": 3306,
+    "dialect": "mysql",
+    "logging": false
+  }
+}
