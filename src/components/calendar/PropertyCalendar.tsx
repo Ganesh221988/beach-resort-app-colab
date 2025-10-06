@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
-import { Property, CalendarSlot } from '../../types/index_legacy';
+import { Property, CalendarSlot } from '../../types';
 
 interface PropertyCalendarProps {
   property: Property;

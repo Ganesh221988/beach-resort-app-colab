@@ -1,153 +1,92 @@
-import React, { useContext } from "react";
-import { Routes, Route, Navigate, Link } from "react-router-dom";
-import { AuthContext } from "./contexts/AuthContext";
-import { SocialMediaProvider } from "./contexts/SocialMediaContext";
-import { AppBar, Toolbar, Typography, Button, Container, Box } from "@mui/material";
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-
-// Common Pages
-import LoginPage from "./pages/LoginPage";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import ReportsAnalytics from "./pages/admin/ReportsAnalytics";
-import AdminOwners from "./pages/admin/AdminOwners";
-import AdminBrokers from "./pages/admin/AdminBrokers";
-import AdminCustomers from "./pages/admin/AdminCustomers";
-import OwnerDashboard from "./pages/OwnerDashboard";
-
-// Owner Pages
-import OwnerPropertyForm from "./components/owner/OwnerPropertyForm";
-import OwnerBookings from "./pages/owner/OwnerBookings";
-import OwnerPayments from "./pages/owner/OwnerPayments";
-
-// Customer Pages
-import CustomerDashboard from "./pages/CustomerDashboard";
-import Favorites from "./pages/customer/Favorites";
-import MyBookings from "./pages/customer/MyBookings";
-
-// Unauthorized Page
-import UnauthorizedPage from "./pages/UnauthorizedPage";
+import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { LandingPage } from './components/landing/LandingPage';
+import { LoginPage } from './components/auth/LoginPage';
+import SignupPage from './components/auth/SignupPage';
+import { AdminDashboard } from './components/dashboard/AdminDashboard';
+import { OwnerDashboard } from './components/dashboard/OwnerDashboard';
+import { BrokerDashboard } from './components/dashboard/BrokerDashboard';
+import { CustomerDashboard } from './components/dashboard/CustomerDashboard';
 
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-});
+// Main App Content
+function AppContent() {
+  const { user, isLoading, signup } = useAuth();
+  const [currentView, setCurrentView] = useState<'landing' | 'login' | 'signup'>('landing');
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg mx-auto">
+            <span className="text-white font-bold text-lg">ECR</span>
+          </div>
+          <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    if (currentView === 'login') {
+      return (
+        <LoginPage 
+          onBack={() => setCurrentView('landing')}
+          onSwitchToSignup={() => setCurrentView('signup')}
+          onBackToLanding={() => setCurrentView('landing')}
+        />
+      );
+    }
+    
+    if (currentView === 'signup') {
+      return (
+        <SignupPage
+          onBack={() => setCurrentView('landing')}
+          onSwitchToLogin={() => setCurrentView('login')}
+          onBackToLanding={() => setCurrentView('landing')}
+          onSignup={async (userData) => {
+            try {
+              const success = await signup(userData);
+              return success;
+            } catch (error) {
+              console.error('Signup error in App:', error);
+              return false;
+            }
+          }}
+          isLoading={isLoading}
+        />
+      );
+    }
+    
+    return (
+      <LandingPage
+        onLogin={() => setCurrentView('login')}
+        onSignup={() => setCurrentView('signup')}
+      />
+    );
+  }
+
+  // Render appropriate dashboard based on user role
+  switch (user.role) {
+    case 'admin':
+      return <AdminDashboard />;
+    case 'owner':
+      return <OwnerDashboard />;
+    case 'broker':
+      return <BrokerDashboard />;
+    case 'customer':
+    default:
+      return <CustomerDashboard />;
+  }
+}
+
+// Main App Component
 function App() {
-  const { user, logout } = useContext(AuthContext)!;
-
   return (
-    <ThemeProvider theme={theme}>
-      <SocialMediaProvider>
-        {/* Navbar */}
-        {user && (
-          <AppBar position="static">
-            <Toolbar>
-              <Typography variant="h6" component="div" sx={{ flexGrow: 0, mr: 2 }}>
-                Beach Resort
-              </Typography>
-              
-              <Box sx={{ flexGrow: 1, display: 'flex', gap: 2 }}>
-                <Button color="inherit" component={Link} to="/">
-                  Home
-                </Button>
-                
-                {user.role === "admin" && (
-                  <>
-                    <Button color="inherit" component={Link} to="/admin">
-                      Dashboard
-                    </Button>
-                    <Button color="inherit" component={Link} to="/admin/reports">
-                      Reports
-                    </Button>
-                    <Button color="inherit" component={Link} to="/admin/owners">
-                      Owners
-                    </Button>
-                    <Button color="inherit" component={Link} to="/admin/brokers">
-                      Brokers
-                    </Button>
-                    <Button color="inherit" component={Link} to="/admin/customers">
-                      Customers
-                    </Button>
-                  </>
-                )}
-                
-                {user.role === "owner" && (
-                  <>
-                    <Button color="inherit" component={Link} to="/owner">
-                      Dashboard
-                    </Button>
-                    <Button color="inherit" component={Link} to="/owner/property-form">
-                      Add Property
-                    </Button>
-                    <Button color="inherit" component={Link} to="/owner/bookings">
-                      Booking Requests
-                    </Button>
-                  </>
-                )}
-                
-                {user.role === "customer" && (
-                  <>
-                    <Button color="inherit" component={Link} to="/customer">
-                      Dashboard
-                    </Button>
-                  </>
-                )}
-              </Box>
-
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Typography variant="body2">
-                  {user.name} ({user.role})
-                </Typography>
-                <Button color="inherit" onClick={logout}>
-                  Logout
-                </Button>
-              </Box>
-            </Toolbar>
-          </AppBar>
-        )}
-
-        {/* Routes */}
-        <Container sx={{ mt: 4 }}>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-
-            {/* Admin Routes */}
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/reports" element={<ReportsAnalytics />} />
-            <Route path="/admin/owners" element={<AdminOwners />} />
-            <Route path="/admin/brokers" element={<AdminBrokers />} />
-            <Route path="/admin/customers" element={<AdminCustomers />} />
-
-            {/* Owner Routes */}
-            <Route path="/owner" element={<OwnerDashboard />} />
-            <Route path="/owner/property-form" element={<OwnerPropertyForm />} />
-            <Route path="/owner/bookings" element={<OwnerBookings />} />
-            <Route path="/owner/payments" element={user?.role === "owner" ? <OwnerPayments /> : <UnauthorizedPage />} />
-
-            {/* Customer Routes */}
-            <Route path="/customer" element={<CustomerDashboard />} />
-            <Route
-              path="/customer/favorites"
-              element={user?.role === "customer" ? <Favorites /> : <UnauthorizedPage />}
-            />
-            <Route
-              path="/customer/my-bookings"
-              element={user?.role === "customer" ? <MyBookings /> : <UnauthorizedPage />}
-            />
-
-            {/* Default Route */}
-            <Route path="/" element={user ? <Navigate to={`/${user.role}`} /> : <Navigate to="/login" />} />
-          </Routes>
-        </Container>
-      </SocialMediaProvider>
-    </ThemeProvider>
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

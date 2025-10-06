@@ -1,14 +1,15 @@
 import React from 'react';
-import { Calendar, Users, MapPin, Clock, IndianRupee } from 'lucide-react';
-import { Booking } from '../../types/index_legacy';
+import { Calendar, Users, MapPin, Clock, IndianRupee, User } from 'lucide-react';
+import { Booking } from '../../types';
 
 interface BookingCardProps {
   booking: Booking;
   showActions?: boolean;
   userRole?: 'admin' | 'owner' | 'broker' | 'customer';
+  onBrokerClick?: (brokerId: string) => void;
 }
 
-export function BookingCard({ booking, showActions = false, userRole }: BookingCardProps) {
+export function BookingCard({ booking, showActions = false, userRole, onBrokerClick }: BookingCardProps) {
   const statusColors = {
     pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
     confirmed: 'bg-green-100 text-green-800 border-green-200',
@@ -94,9 +95,13 @@ export function BookingCard({ booking, showActions = false, userRole }: BookingC
           </div>
           {booking.broker_name && (
             <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                Via {booking.broker_name}
-              </span>
+              <button
+                onClick={() => booking.broker_id && onBrokerClick?.(booking.broker_id)}
+                className="flex items-center space-x-1 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full hover:bg-green-200 transition-colors cursor-pointer"
+              >
+                <User className="h-3 w-3" />
+                <span>Via {booking.broker_name}</span>
+              </button>
             </div>
           )}
         </div>

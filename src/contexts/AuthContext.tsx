@@ -1,98 +1,114 @@
-import React, { createContext, useState, useEffect, ReactNode, useCallback } from "react";
-import authApi from "../api/authApi";
-import type { User, AuthResponse } from "../services/api";
-import setToken from "../services/api";
-import { AppError, handleApiError, getErrorMessage } from "../utils/errorUtils";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { authService, AuthUser } from '../services/authService';
 
 interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  user: AuthUser | null;
+  login: (email: string, password: string) => Promise<boolean>;
+  signup: (userData: {
+    name: string;
+    email: string;
+    phone: string;
+    password: string;
+    role: 'customer' | 'owner' | 'broker';
+  }) => Promise<boolean>;
   logout: () => void;
-  error: string | null;
+  isLoading: boolean;
+  switchRole: (role: 'admin' | 'owner' | 'broker' | 'customer') => void;
+  sendPasswordReset: (email: string) => Promise<boolean>;
 }
 
-export const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-  const context = React.useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
-    if (token && userData) {
-      try {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
-        setToken(token);
-      } catch (err) {
-        console.error("Failed to parse stored user data:", err);
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-      }
-    }
-  }, []);
-
-  const login = async (email: string, password: string) => {
-    try {
-      setError(null);
-      
-      if (!email || !password) {
-        throw new AppError(
-          "Email and password are required",
-          "VALIDATION_ERROR",
-          !email ? "email" : "password"
-        );
-      }
-
-      const response = await authApi.login({ email, password });
-
-      if (!response.token || !response.user) {
-        throw new AppError(
-          "Invalid response from server",
-          "INVALID_RESPONSE",
-          undefined,
-          500
-        );
-      }
-
-      localStorage.setItem("token", response.token);
-      localStorage.setItem("user", JSON.stringify(response.user));
-      setToken(response.token);
-      setUser(response.user);
-    } catch (err) {
-      const appError = handleApiError(err);
-      setError(getErrorMessage(appError));
-      throw appError;
+  const switchRole = (role: 'admin' | 'owner' | 'broker' | 'customer') => {
+    if (user) {
+      setUser({ ...user, role });
     }
   };
 
-  const logout = useCallback(() => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setToken("");
+  const login = async (email: string, password: string): Promise<boolean> => {
+    setIsLoading(true);
+    
+    try {
+      const result = await authService.signin({ email, password });
+      
+      if (result.success && result.user) {
+        setUser(result.user);
+        return true;
+      } else {
+        console.error('Login failed:', result.error);
+        return false;
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signup = async (userData: {
+    name: string;
+    email: string;
+    phone: string;
+    password: string;
+    role: 'customer' | 'owner' | 'broker';
+  }): Promise<boolean> => {
+    setIsLoading(true);
+    
+    try {
+      const result = await authService.signup(userData);
+      
+      if (result.success) {
+        return true;
+      } else {
+        console.error('Signup failed:', result.error);
+        return false;
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sendPasswordReset = async (email: string): Promise<boolean> => {
+    try {
+      const result = await authService.sendPasswordReset(email);
+      return result.success;
+    } catch (error) {
+      console.error('Password reset error:', error);
+      return false;
+    }
+  };
+
+  const logout = () => {
     setUser(null);
-    setError(null);
-  }, []);
+  };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      login, 
+    <AuthContext.Provider value={{
+      user,
+      login,
+      signup,
       logout,
-      isAuthenticated: Boolean(user),
-      error
+      isLoading,
+      switchRole,
+      sendPasswordReset
     }}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}

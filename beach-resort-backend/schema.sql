@@ -1,1 +1,0 @@
--- MySQL schema for beach_resort 

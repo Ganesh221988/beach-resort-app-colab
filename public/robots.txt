@@ -1,0 +1,28 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://ecrbeachresorts.com/sitemap.xml
+
+# Crawl-delay for better server performance
+Crawl-delay: 1
+
+# Specific rules for search engines
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 2
+
+# Block access to admin areas (if any)
+Disallow: /admin/
+Disallow: /api/internal/
+
+# Allow important pages
+Allow: /properties/
+Allow: /search/
+Allow: /events/
+Allow: /about/
+Allow: /contact/

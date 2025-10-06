@@ -1,16 +1,27 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
-import App from "./App";
-import { AuthProvider } from "./contexts/AuthContext";
-import "./index.css";
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App.tsx';
+import './index.css';
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
+console.log('main.tsx executing');
+
+try {
+  const rootElement = document.getElementById('root');
+  console.log('Root element:', rootElement);
+
+  if (!rootElement) {
+    console.error('Root element not found!');
+    document.body.innerHTML = '<div style="padding: 20px; color: red;">Error: Root element not found</div>';
+  } else {
+    console.log('Creating React root and rendering App');
+    createRoot(rootElement).render(
+      <StrictMode>
         <App />
-      </AuthProvider>
-    </BrowserRouter>
-  </React.StrictMode>
-);
+      </StrictMode>
+    );
+    console.log('React app rendered successfully');
+  }
+} catch (error) {
+  console.error('Fatal error in main.tsx:', error);
+  document.body.innerHTML = `<div style="padding: 20px; color: red;">Fatal Error: ${error}</div>`;
+}
